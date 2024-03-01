@@ -222,17 +222,6 @@ def simulate_SPRT_fixedtime(mu, sigma, stop_time, true_dist=1):
     else:
         Mvec = p_neg.rvs(size=stop_time)
 
-    # Calculate log likelihood ratio for each measurement (delta_t)
-    # ll_ratio_vec = log_likelihood_ratio(Mvec, p_neg, p_pos)
-
-    # STEP 1: Calculate accumulated evidence (S) given a time series of evidence (hint: np.cumsum)
-    # evidence_history = np.cumsum(ll_ratio_vec)
-    #
-    # # STEP 2: Make decision based on the sign of the evidence at the final time.
-    # decision = np.sign(evidence_history[-1])
-    #
-    # return evidence_history, decision, Mvec
-
 
 def create_random_walks_csv(
     starting_position,
@@ -310,79 +299,6 @@ def create_random_walks(num_walks, store_csv):
         num_walks,
         store_csv,
     )
-
-
-# def threshold_error(pd_walks_data, threshold):
-#     """
-#     Finds the error_rate at a certain threshold for the random walks
-#     Inputs:
-#         pd_walks_data: a pandas dataframe of the csv file with num_walks random walks
-#         threshold: the threshold to find the error rate at
-#     Outputs:
-#         error_rate: the error rate at the threshold
-#     """
-#     iterations = len(pd_walks_data)
-#     error = np.zeros(iterations)
-#     for i in range(iterations):
-#         final_walk_value = pd_walks_data.iloc[i].dropna().iloc[-1]
-#         if final_walk_value > threshold:
-#             error[i] = 1
-#         elif final_walk_value < -threshold:
-#             error[i] = 0
-#         else:
-#             raise ValueError("The threshold is too small")
-#     correct_rate = np.sum(error) * 100 / iterations
-#     error_rate = 100 - correct_rate
-#     return error_rate
-
-
-# def new_threshold_error(pd_walks_data, threshold, correct_threshold="higher"):
-#     """
-#     Finds the error_rate at a certain threshold for the random walks
-#     Inputs:
-#         pd_walks_data: a pandas dataframe of the csv file with num_walks random walks
-#         threshold: the threshold to find the error rate at
-#         correct_threshold: a string that determines whether the threshold is higher or lower
-#     Outputs:
-#         error_rate: the error rate at the threshold
-#     """
-#     if correct_threshold == "higher":
-#         pd_correct = pd_walks_data[pd_walks_data > threshold]
-#     elif correct_threshold == "lower":
-#         pd_correct = pd_walks_data[pd_walks_data < -threshold]
-#     else:
-#         raise ValueError("Please choose correct threshold either higher or lower")
-#     iterations = len(pd_walks_data)
-#     correct_num = pd_correct.any(axis=1).apply(int).sum()
-#     correct_rate = correct_num * 100 / iterations
-#     error_rate = 100 - correct_rate
-#     return error_rate
-
-
-# def new_threshold_time(pd_walks_data, threshold):
-#     """
-#     Finds the error_rate at a certain threshold for the random walks
-#     Inputs:
-#         pd_walks_data: a pandas dataframe of the csv file with num_walks random walks
-#         threshold: the threshold to find the error rate at
-#     Outputs:
-#         error_rate: the error rate at the threshold
-#     """
-#     pd_higher = pd_walks_data[pd_walks_data > threshold]
-#     pd_lower = pd_walks_data[pd_walks_data < -threshold]
-#     iterations = len(pd_walks_data)
-#     x_higher = np.zeros(iterations)
-#     x_lower = np.zeros(iterations)
-#     time_higher = np.zeros(iterations)
-#     time_lower = np.zeros(iterations)
-#     for i in range(iterations):
-#         if pd_higher.iloc[i].dropna().tolist() != []:
-#             x_higher[i] = pd_higher.iloc[i].dropna().index[0]
-#         elif pd_lower.iloc[i].dropna().tolist() != []:
-#             x_lower[i] = pd_lower.iloc[i].dropna().index[0]
-#         else:
-#             raise ValueError("The threshold is too small")
-#     return x_higher, x_lower, time_higher, time_lower
 
 
 def find_first_occurrence(row, threshold):
@@ -672,6 +588,260 @@ def find_error_bound(pd_walks_data, Bound):
     print(f"average time: {round(average_time, 2)}")
 
 
+def dynamic_threshold_around_OLT(
+    current_time, OLT, initial_bound_distance, min_bound_distance
+):
+    """
+    Calculate dynamic thresholds that decrease as current_time approaches OLT
+    and then stabilize or change behavior post-OLT.
+    """
+    if current_time < OLT:
+        # Example: Linear decrease towards OLT
+        progress_ratio = current_time / OLT
+        distance = initial_bound_distance - (
+            (initial_bound_distance - min_bound_distance) * progress_ratio
+        )
+    else:
+        # Keep threshold constant after OLT or implement another rule
+        distance = min_bound_distance  # This keeps the threshold constant after OLT
+    upper_bound = starting_position + distance
+    lower_bound = starting_position - distance
+    return upper_bound, lower_bound
+
+
+def visualize_walks_meeting_threshold_before_OLT_old(
+    df_walks, OLT, initial_bound_distance, min_bound_distance
+):
+    fig, ax = plt.subplots(figsize=(12, 7))
+    threshold_meet_before_OLT = []
+
+    # Calculate dynamic thresholds up to the OLT
+    upper_thresholds = [
+        dynamic_threshold_around_OLT(
+            t, OLT, initial_bound_distance, min_bound_distance
+        )[0]
+        for t in range(OLT)
+    ]
+    lower_thresholds = [
+        dynamic_threshold_around_OLT(
+            t, OLT, initial_bound_distance, min_bound_distance
+        )[1]
+        for t in range(OLT)
+    ]
+
+    # Determine which walks meet the threshold before the OLT
+    for index, row in df_walks.iterrows():
+        walk = row.dropna().values[:OLT]
+        if any(walk > upper_thresholds) or any(walk < lower_thresholds):
+            threshold_meet_before_OLT.append(index)
+
+    # Plot walks that meet the condition
+    for index in threshold_meet_before_OLT:
+        walk = df_walks.loc[index].dropna().values[:OLT]
+        ax.plot(range(OLT), walk, label=f"Walk {index}")
+
+    # Plot dynamic thresholds
+    ax.plot(range(OLT), upper_thresholds, "--", color="grey", label="Upper Threshold")
+    ax.plot(range(OLT), lower_thresholds, "--", color="grey", label="Lower Threshold")
+
+    # Highlight the Optimal Leaving Time (OLT)
+    ax.axvline(
+        x=OLT - 1,
+        color="red",
+        linestyle="-",
+        linewidth=2,
+        label="Optimal Leaving Time (OLT)",
+    )
+
+    ax.set_title("Walks Meeting Threshold Before OLT")
+    ax.set_xlabel("Time Step")
+    ax.set_ylabel("Position")
+    # ax.legend(loc="upper right")
+    plt.tight_layout()
+
+
+def visualize_walks_meeting_upper_threshold_before_OLT(
+    df_walks, OLT, initial_bound_distance, min_bound_distance
+):
+    fig, ax = plt.subplots(figsize=(12, 7))
+
+    # Calculate dynamic upper threshold up to the OLT
+    upper_thresholds = [
+        dynamic_threshold_around_OLT(
+            t, OLT, initial_bound_distance, min_bound_distance
+        )[0]
+        for t in range(OLT)
+    ]
+
+    # Track walks that meet the upper threshold before the OLT and their stopping points
+    walks_meeting_threshold = []
+    stop_points = []
+
+    for index, row in df_walks.iterrows():
+        walk = row.dropna().values
+        stop_point = OLT  # Default to OLT if threshold not met
+        for i, position in enumerate(walk):
+            if i >= OLT:  # Only consider up to OLT
+                break
+            if position > upper_thresholds[i]:  # Threshold met
+                stop_point = i
+                walks_meeting_threshold.append(index)
+                stop_points.append(stop_point)
+                break
+
+    # Plot walks that meet the upper threshold condition
+    for index, stop_point in zip(walks_meeting_threshold, stop_points):
+        walk = (
+            df_walks.loc[index].dropna().values[:stop_point]
+        )  # Include the point where threshold is met
+        ax.plot(range(len(walk)), walk, label=f"Walk {index}")
+
+    # Plot dynamic upper threshold
+    ax.plot(range(OLT), upper_thresholds, "--", color="orange", label="Upper Threshold")
+
+    # Highlight the Optimal Leaving Time (OLT)
+    ax.axvline(
+        x=OLT,
+        color="red",
+        linestyle="-",
+        linewidth=2,
+        label="Optimal Leaving Time (OLT)",
+    )
+
+    ax.set_title("Walks Meeting Upper Threshold Before OLT")
+    ax.set_xlabel("Time Step")
+    ax.set_ylabel("Position")
+    # ax.legend(loc="upper right")
+    plt.tight_layout()
+    plt.show()
+
+
+def dynamic_threshold_non_linear(t, OLT, initial_bound_distance, min_bound_distance):
+    """
+    Calculate a non-linearly decreasing dynamic threshold as t approaches OLT.
+    The threshold decreases more rapidly as it gets closer to OLT.
+    """
+    if t >= OLT:
+        return min_bound_distance
+    else:
+        # Non-linear decrease: e.g., exponential decay towards the OLT
+        # Adjust the rate of decay with the exponent to fit the desired urgency
+        urgency_factor = (
+            5  # Adjust this factor to control how quickly the threshold decreases
+        )
+        time_ratio = 1 - ((t / OLT) ** urgency_factor)
+        distance = (
+            min_bound_distance
+            + (initial_bound_distance - min_bound_distance) * time_ratio
+        )
+        return distance
+
+
+def visualize_walks_meeting_non_linear_threshold_before_OLT(
+    df_walks, OLT, initial_bound_distance, min_bound_distance, num_walks=10
+):
+    fig, ax = plt.subplots(figsize=(12, 7))
+
+    upper_thresholds = [
+        dynamic_threshold_non_linear(t, OLT, initial_bound_distance, min_bound_distance)
+        for t in range(OLT)
+    ]
+
+    # Choose a subset of walks to visualize
+    sample_indices = np.random.choice(df_walks.index, size=num_walks, replace=False)
+
+    for index in sample_indices:
+        walk = (
+            df_walks.loc[index].dropna().values[:OLT]
+        )  # Ensure walk is limited to OLT for comparison
+        # Determine the first point where the walk exceeds the threshold, if at all
+        for i, pos in enumerate(walk):
+            if pos > upper_thresholds[i]:
+                stop_point = i  # Stop at first point where threshold is exceeded
+                break
+        else:
+            stop_point = (
+                len(walk) - 1
+            )  # Use the last point if threshold is never exceeded
+
+        # Correct the plotting range to align x and y dimensions
+        ax.plot(range(stop_point), walk[:stop_point], label=f"Walk {index}")
+
+    ax.plot(
+        range(OLT),
+        upper_thresholds,
+        "--",
+        color="orange",
+        label="Dynamic Upper Threshold",
+    )
+
+    ax.axvline(
+        x=OLT - 1,
+        color="red",
+        linestyle="-",
+        linewidth=2,
+        label="Optimal Leaving Time (OLT)",
+    )
+
+    ax.set_title("Walks Meeting Non-linear Upper Threshold Before OLT")
+    ax.set_xlabel("Time Step")
+    ax.set_ylabel("Position")
+    # ax.legend()
+    plt.tight_layout()
+    plt.show()
+
+
+def visualize_walks_hitting_upper_threshold_before_OLT(
+    df_walks, OLT, initial_bound_distance, min_bound_distance, num_walks=100
+):
+    fig, ax = plt.subplots(figsize=(12, 7))
+
+    # Define the dynamic upper threshold across the time steps up to OLT
+    upper_thresholds = [
+        dynamic_threshold_non_linear(t, OLT, initial_bound_distance, min_bound_distance)
+        for t in range(OLT)
+    ]
+
+    # Iterate over walks and visualize only those hitting the threshold before OLT
+    for index, row in df_walks.iterrows():
+        walk = (
+            row.dropna().values
+        )  # Get the walk data, dropping NA for incomplete walks
+        walk_length = min(len(walk), OLT)  # Limit the walk to OLT for comparison
+        for i in range(walk_length):
+            if (
+                walk[i] > upper_thresholds[i]
+            ):  # Check if the walk hits the upper threshold
+                # Plot the walk up to the point it hits the threshold
+                ax.plot(range(i), walk[:i], label=f"Walk {index}")
+                break  # Stop after visualizing up to the threshold hit
+
+    # Plot the dynamic upper threshold
+    ax.plot(
+        range(OLT),
+        upper_thresholds,
+        "--",
+        color="orange",
+        label="Dynamic Upper Threshold",
+    )
+
+    # Highlight the OLT
+    ax.axvline(
+        x=OLT,
+        color="red",
+        linestyle="-",
+        linewidth=2,
+        label="Optimal Leaving Time (OLT)",
+    )
+
+    ax.set_title("Walks Hitting Upper Threshold Before OLT")
+    ax.set_xlabel("Time Step")
+    ax.set_ylabel("Position")
+    # ax.legend()  # Optional: Comment out if the legend is too crowded
+    plt.tight_layout()
+    plt.show()
+
+
 if __name__ == "__main__":
     # np.random.seed(0)
     starting_position = 0
@@ -698,4 +868,33 @@ if __name__ == "__main__":
     #     pd_walks_data, Bound
     # )  # dont use pd_error_data because the column names do not have integer values
     # create_speed_accuracy_graph(pd_error_data)
-    check_subplot_graph(pd_walks_data, Bound)
+    # check_subplot_graph(pd_walks_data, Bound)
+
+    # Threshold both lower and upper changing to OLT
+    # visualize_walks_meeting_threshold_before_OLT_old(
+    #     pd_walks_data, OLT=50, initial_bound_distance=5, min_bound_distance=0
+    # )
+
+    # Only upper threshold changing linearly as it gets closer to OLT
+    # visualize_walks_meeting_upper_threshold_before_OLT(
+    #     pd_walks_data, OLT=50, initial_bound_distance=5, min_bound_distance=0
+    # )
+
+    # Assuming df_walks, OLT, initial_bound_distance, and min_bound_distance are already defined
+    # Ensure df_walks is loaded with your walks data
+    # visualize_walks_meeting_non_linear_threshold_before_OLT(
+    #     pd_walks_data,
+    #     OLT=50,
+    #     initial_bound_distance=1,
+    #     min_bound_distance=0,
+    #     num_walks=10000,
+    # )
+    # Assuming df_walks, OLT, initial_bound_distance, and min_bound_distance are already defined
+    # Ensure df_walks is loaded with your walks data
+    visualize_walks_hitting_upper_threshold_before_OLT(
+        pd_walks_data,
+        OLT=50,
+        initial_bound_distance=1,
+        min_bound_distance=0.1,
+        num_walks=10000,
+    )
