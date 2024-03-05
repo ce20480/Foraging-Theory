@@ -4,14 +4,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import ast
-from scipy import stats
-from scipy.special import erf
 
-# from scipy.stats import lognorm, norm, probplot
+# import ast
+# from scipy import stats
+# from scipy.special import erf
+
 
 """
 random imports from copilot
+
 # import matplotlib.animation as animation
 # import matplotlib.cm as cm
 # import matplotlib.colors as colors
