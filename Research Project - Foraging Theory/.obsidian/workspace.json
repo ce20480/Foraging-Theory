@@ -25,14 +25,24 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Foraging Theory/Structure/Discussion.md",
+                "file": "Foraging Theory/Structure/Changes to be made.md",
                 "mode": "source",
                 "source": false
               }
             }
+          },
+          {
+            "id": "55c8b5f0f02ce35d",
+            "type": "leaf",
+            "state": {
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.5.11"
+              }
+            }
           }
         ],
-        "currentTab": 1
+        "currentTab": 2
       },
       {
         "id": "73457d0cb5cdf867",
@@ -45,8 +55,21 @@
               "type": "graph",
               "state": {}
             }
+          },
+          {
+            "id": "c6d0fdcc00962274",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Foraging Theory/Structure/Introduction.md",
+                "mode": "source",
+                "source": false
+              }
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -96,8 +119,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 242.5,
-    "collapsed": true
+    "width": 242.5
   },
   "right": {
     "id": "04d80680c7d3fcf6",
@@ -113,7 +135,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Foraging Theory/Structure/Discussion.md",
+                "file": "Foraging Theory/Structure/Changes to be made.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -130,7 +152,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Foraging Theory/Structure/Discussion.md",
+                "file": "Foraging Theory/Structure/Changes to be made.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -153,7 +175,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Foraging Theory/Structure/Discussion.md"
+                "file": "Foraging Theory/Structure/Changes to be made.md"
               }
             }
           }
@@ -174,12 +196,14 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "67dd719c7827604b",
+  "active": "55c8b5f0f02ce35d",
   "lastOpenFiles": [
+    "Foraging Theory/Structure/Literature review.md",
+    "Foraging Theory/Structure/Changes to be made.md",
+    "Foraging Theory/Structure/Discussion.md",
     "Foraging Theory/Structure/Introduction.md",
     "Foraging Theory/Learning For Decision Making.md",
     "Foraging Theory/Structure/Conclusion.md",
-    "Foraging Theory/Structure/Discussion.md",
     "Foraging Theory/Structure/Results.md",
     "Foraging Theory/Structure/Methodology.md",
     "Foraging Theory/Structure/Theoretical Background.md",

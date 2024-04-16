@@ -24,3 +24,18 @@ For the introduction of your paper on using evidence-based accumulation to under
     
     - How can evidence accumulation models be further adapted to account for the complexities of natural foraging scenarios, such as social foraging, predation risk, and resource variability?
     - What are the implications of these models for conservation biology, behavioral ecology, and the management of natural resources?
+Foraging is a ubiquitous animal behaviour, seen in all animals from fish to reptiles [4].
+
+Optimal foraging is essential to the survival of not only the individual but the species itself. Thus the importance of understanding foraging theory is a bridge to understanding a part of our survival and evolution. 
+Foraging theory concerns activities related to the acquisition of food [12]. It addresses decisions  
+regarding (i) where to search, (ii) when to feed, (iii) which food types to consume, and (iv) when  
+to terminate feeding and move on [15]. This project focuses on (iv) when to terminate and move  
+on. This understanding of deciding when to leave extends to many decisions, across economic,  
+political, and social spheres [10]. Therefore, its importance supersedes its direct relevance to  
+foraging.  
+Although this ecological behaviour has been extensively studied, it is not known how the brain  
+processes information obtained during foraging activity to make subsequent foraging decisions  
+[4]. Theoretical work has been conducted to find the optimal times to leave a patch using  
+models like the marginal value theorem based purely on rewards that model food intake within  
+patches. However, this project aims to fill this void, using evidence-based accumulation to  
+evaluate optimal patch residency times.

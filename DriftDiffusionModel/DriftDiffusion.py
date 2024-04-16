@@ -4,6 +4,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import os
 
 # import ast
 # from scipy import stats
@@ -861,10 +862,14 @@ if __name__ == "__main__":
     # check_walk_save_func()
     # create_random_walks(num_walks, store_csv) # now stored 10,000 walks with drift variable 0.01 and thresholds max at 5 and min at -5
     # save_bounds_csv(pd_walks_data, num_steps, bound_lower_limit, bound_higher_limit) with bounds 0.0001 to 5 with 1000 steps
-    pd_walks_data = pd.read_csv("../data/random_walks.csv")
-    pd_error_data = pd.read_csv(
-        "../data/random_walks_with_step_1000_bounds_0.0001_5.csv"
+    path_to_random_walks = os.path.join((os.getcwd()), "data/random_walks.csv")
+    path_to_error_data = os.path.join(
+        (os.getcwd()), "data/random_walks_with_step_1000_bounds_0.0001_5.csv"
     )
+    pd_walks_data = pd.read_csv(path_to_random_walks)
+    pd_error_data = pd.read_csv(
+        path_to_error_data
+    )  # This is a data with error in the bounds
     # find_error_bound(
     #     pd_walks_data, Bound
     # )  # dont use pd_error_data because the column names do not have integer values
@@ -877,9 +882,9 @@ if __name__ == "__main__":
     # )
 
     # Only upper threshold changing linearly as it gets closer to OLT
-    # visualize_walks_meeting_upper_threshold_before_OLT(
-    #     pd_walks_data, OLT=50, initial_bound_distance=5, min_bound_distance=0
-    # )
+    visualize_walks_meeting_upper_threshold_before_OLT(
+        pd_walks_data, OLT=50, initial_bound_distance=5, min_bound_distance=0
+    )
 
     # Assuming df_walks, OLT, initial_bound_distance, and min_bound_distance are already defined
     # Ensure df_walks is loaded with your walks data
@@ -892,10 +897,10 @@ if __name__ == "__main__":
     # )
     # Assuming df_walks, OLT, initial_bound_distance, and min_bound_distance are already defined
     # Ensure df_walks is loaded with your walks data
-    visualize_walks_hitting_upper_threshold_before_OLT(
-        pd_walks_data,
-        OLT=50,
-        initial_bound_distance=1,
-        min_bound_distance=0.1,
-        num_walks=10000,
-    )
+    # visualize_walks_hitting_upper_threshold_before_OLT(
+    #     pd_walks_data,
+    #     OLT=50,
+    #     initial_bound_distance=1,
+    #     min_bound_distance=0.1,
+    #     num_walks=500,
+    # )

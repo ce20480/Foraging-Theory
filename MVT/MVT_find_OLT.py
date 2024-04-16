@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+# activate latex
+plt.rcParams.update({"text.usetex": True, "font.size": 16})
+
 
 # Function to calculate energy gained at a single time point in a patch
 def patch_gain(t, A):
@@ -28,16 +31,17 @@ if __name__ == "__main__":
     travel_t = 6  # Time it takes to travel between patches
 
     # Starting resources in patches: low, medium, and high quality.
-    patch_start_R = np.array([32.5, 45, 57.5])
+    patch_start_R = np.array([32.5, 45])
 
     # Environment setups: rich and poor.
-    env = np.array([[0.2, 0.3, 0.5], [0.5, 0.3, 0.2]])
-    env_n = env.shape[0]  # Number of environment types
+    env = np.array([[0.5, 0.5], [0.5, 0.5]])
+    env_n = env.shape[0]
 
     # Simulation parameters
     measurements = 10000
     time = 50
     reso = np.linspace(1, time, measurements)
+    t_diff = reso[1] - reso[0]
 
     # Assuming patch_start_R, reso, travel_t are defined
     patch_n = len(patch_start_R)
@@ -72,7 +76,8 @@ if __name__ == "__main__":
     plt.show()
 
     # Calculate and plot Optimal Leaving Time (OLT) - finding the max RR index for each patch type
-    OLT = np.argmax(RR, axis=1)
+    OLT = np.argmax(RR, axis=1) * t_diff
+    print(OLT)
 
     # Plotting Instantaneous Reward for all patches along with RR
     # plt.figure(figsize=(10, 6))

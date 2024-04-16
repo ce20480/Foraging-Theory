@@ -217,24 +217,7 @@ if __name__ == "__main__":
     #     pd_walks_data, OLT=50, initial_bound_distance=5, end_y=-5, total_steps=100
     # )
 
-    # Example usage
-    # thresholds = np.linspace(5, -5, pd_walks_data.index.size)
-    # time = np.linspace(0, pd_walks_data.index.size, pd_walks_data.index.size)
-    # A = 10  # Amplitude of reward
-    # Lambda = 0.11  # Decay rate of reward
-    # reward_per_step = 1  # Simplified reward per time step
-    # reward_loss_df = calculate_reward_loss_simple(
-    #     pd_walks_data, thresholds, OLT=50, reward_per_step=reward_per_step
-    # )
-    # reward_per_step = [
-    #     A * np.exp(-Lambda * t) for t in time
-    # ]  # exponential reward per time step
-    # reward_loss_df = calculate_reward_loss(
-    #     pd_walks_data, thresholds, OLT=50, reward_per_step=reward_per_step
-    # )
-    # print(reward_loss_df.head())
-
-    # Example usage:
+    # Example usage of threshold reward loss finding:
     OLT = 50  # Optimal Leaving Time
     start_threshold = 5  # Starting threshold
     end_threshold = -5  # Threshold at OLT

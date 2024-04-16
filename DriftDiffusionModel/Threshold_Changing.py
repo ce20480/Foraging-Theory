@@ -1,6 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import pandas as pd
+import os
+
+# import torch
+# import torch.optim as optim
+
+plt.rcParams.update({"text.usetex": True, "font.size": 16})
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 
 def dynamic_threshold_around_OLT(
@@ -383,12 +391,133 @@ def visualize_walks_with_linear_threshold_extended(
     plt.show()
 
 
-if __name__ == "__main__":
-    pd_walks_data = pd.read_csv("../data/random_walks.csv")
-    pd_error_data = pd.read_csv(
-        "../data/random_walks_with_step_1000_bounds_0.0001_5.csv"
+def calculate_average_meeting_time(df_walks, OLT, y_intercept, gradient, total_steps):
+    meeting_times = []
+    for _, walk in df_walks.iterrows():
+        for t, position in enumerate(walk.dropna()):
+            threshold = y_intercept + gradient * t
+            if position >= threshold:
+                meeting_times.append(t)
+                break
+            if t >= total_steps:
+                meeting_times.append(t)  # If the walk never meets the threshold
+                break
+
+    average_meeting_time = np.mean(meeting_times) if meeting_times else None
+    return average_meeting_time
+
+
+def find_best_threshold(df_walks, OLT, y_intercepts, gradients, total_steps):
+    best_params = {
+        "y_intercept": None,
+        "gradient": None,
+        "average_meeting_time": float("inf"),
+    }
+
+    for y_intercept in y_intercepts:
+        for gradient in gradients:
+            avg_time = calculate_average_meeting_time(
+                df_walks, OLT, y_intercept, gradient, total_steps
+            )
+            if avg_time and abs(avg_time - OLT) < abs(
+                best_params["average_meeting_time"] - OLT
+            ):
+                best_params["y_intercept"] = y_intercept
+                best_params["gradient"] = gradient
+                best_params["average_meeting_time"] = avg_time
+
+    return best_params
+
+
+def record_threshold_data(df_walks, OLT, y_intercepts, gradients, total_steps):
+    records = []
+
+    for y_intercept in y_intercepts:
+        for gradient in gradients:
+            avg_time = calculate_average_meeting_time(
+                df_walks, OLT, y_intercept, gradient, total_steps
+            )
+            records.append((y_intercept, gradient, avg_time))
+
+    return pd.DataFrame(
+        records, columns=["y_intercept", "gradient", "average_meeting_time"]
     )
-    # # Visualize non-linear threshold up to 0
+
+
+def plot_3d_threshold_data(df_threshold_data):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection="3d")
+
+    xs = df_threshold_data["y_intercept"]
+    ys = df_threshold_data["gradient"]
+    zs = df_threshold_data["average_meeting_time"]
+
+    ax.scatter(xs, ys, zs)
+
+    ax.set_xlabel("Y-Intercept")
+    ax.set_ylabel("Gradient")
+    ax.set_zlabel("Average Meeting Time")
+
+    plt.show()
+
+
+def create_best_thresholds():
+    # Assuming df_walks is a DataFrame where each row is a walk and each column is a timestep
+    # Define the range for y-intercepts and gradients
+    y_begin = -5
+    y_end = 5
+    grad_begin = -1
+    grad_end = 1
+    range_of_values = 100
+    OLT = 50
+    # y_intercepts = np.linspace(-10, 10, 100)  # Adjust these ranges and steps as needed
+    # gradients = np.linspace(-1, 1, 100)  # Adjust these ranges and steps as needed
+    y_intercepts = np.linspace(
+        y_begin, y_end, range_of_values
+    )  # Adjust these ranges and steps as needed
+    gradients = np.linspace(
+        grad_begin, grad_end, range_of_values
+    )  # Adjust these ranges and steps as needed
+    total_steps = 100  # or the maximum number of timesteps you have in your walks
+    # best_threshold = find_best_threshold(
+    #     pd_walks_data,
+    #     OLT=OLT,
+    #     y_intercepts=y_intercepts,
+    #     gradients=gradients,
+    #     total_steps=total_steps,
+    # )
+
+    # Record the threshold data
+    df_threshold_data = record_threshold_data(
+        pd_walks_data,
+        OLT=OLT,
+        y_intercepts=y_intercepts,
+        gradients=gradients,
+        total_steps=total_steps,
+    )
+
+    # how to conver dataframe to csv
+    df_threshold_data.to_csv(
+        f"data/optimal_threshold_data_{y_begin}_{y_end}_{grad_begin}_{grad_end}.csv",
+        index=False,
+    )
+
+    # Plot the 3D data
+    plot_3d_threshold_data(df_threshold_data)
+
+
+if __name__ == "__main__":
+    # how to get path of file in a folder in the same directory as the script using os
+    path_to_random_walks = os.path.join((os.getcwd()), "data/random_walks.csv")
+    path_to_error_data = os.path.join(
+        (os.getcwd()), "data/random_walks_with_step_1000_bounds_0.0001_5.csv"
+    )
+    pd_walks_data = pd.read_csv(path_to_random_walks)
+    pd_error_data = pd.read_csv(
+        path_to_error_data
+    )  # This is a data with error in the bounds
+
+    # Visualize non-linear threshold up to 0
     # visualize_walks_hitting_upper_threshold_before_OLT(
     #     pd_walks_data,
     #     OLT=50,
@@ -400,6 +529,12 @@ if __name__ == "__main__":
     # visualize_walks_with_extended_threshold(
     #     pd_walks_data, OLT=50, initial_bound_distance=5, end_y=-5, total_steps=100
     # )
-    visualize_walks_with_linear_threshold_extended(
-        pd_walks_data, OLT=50, initial_bound_distance=5, end_y=-5, total_steps=100
+    # visualize_walks_with_linear_threshold_extended(
+    #     pd_walks_data, OLT=50, initial_bound_distance=5, end_y=-5, total_steps=100
+    # )
+
+    path_to_average_times = os.path.join(
+        (os.getcwd()), "data/optimal_threshold_data.csv"
     )
+    df_threshold_average_times = pd.read_csv(path_to_average_times)
+    plot_3d_threshold_data(df_threshold_average_times)
