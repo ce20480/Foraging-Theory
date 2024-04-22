@@ -407,6 +407,46 @@ def calculate_average_meeting_time(df_walks, OLT, y_intercept, gradient, total_s
     return average_meeting_time
 
 
+def calculate_average_diff_meeting_time(
+    df_walks, OLT, y_intercept, gradient, total_steps
+):
+    meeting_times = []
+    for _, walk in df_walks.iterrows():
+        for t, position in enumerate(walk.dropna()):
+            threshold = y_intercept + gradient * t
+            if position >= threshold:
+                t = abs(t - OLT)  # Calculate the difference from the OLT
+                meeting_times.append(t)
+                break
+            if t >= total_steps:
+                t = abs(t - OLT)  # Calculate the difference from the OLT
+                meeting_times.append(t)  # If the walk never meets the threshold
+                break
+
+    average_meeting_time = np.mean(meeting_times) if meeting_times else None
+    return average_meeting_time
+
+
+def non_linear_calculate_average_diff_meeting_time(
+    df_walks, OLT, y_intercept, gradient, total_steps
+):
+    meeting_times = []
+    for _, walk in df_walks.iterrows():
+        for t, position in enumerate(walk.dropna()):
+            threshold = y_intercept + gradient * (t ^ 2)
+            if position >= threshold:
+                t = abs(t - OLT)  # Calculate the difference from the OLT
+                meeting_times.append(t)
+                break
+            if t >= total_steps:
+                t = abs(t - OLT)  # Calculate the difference from the OLT
+                meeting_times.append(t)  # If the walk never meets the threshold
+                break
+
+    average_meeting_time = np.mean(meeting_times) if meeting_times else None
+    return average_meeting_time
+
+
 def find_best_threshold(df_walks, OLT, y_intercepts, gradients, total_steps):
     best_params = {
         "y_intercept": None,
@@ -434,7 +474,7 @@ def record_threshold_data(df_walks, OLT, y_intercepts, gradients, total_steps):
 
     for y_intercept in y_intercepts:
         for gradient in gradients:
-            avg_time = calculate_average_meeting_time(
+            avg_time = non_linear_calculate_average_diff_meeting_time(
                 df_walks, OLT, y_intercept, gradient, total_steps
             )
             records.append((y_intercept, gradient, avg_time))
@@ -456,18 +496,19 @@ def plot_3d_threshold_data(df_threshold_data):
 
     ax.set_xlabel("Y-Intercept")
     ax.set_ylabel("Gradient")
-    ax.set_zlabel("Average Meeting Time")
+    ax.set_zlabel("Temporal Difference(s)")
 
+    # plt.savefig("3D_threshold_data_2.png")
     plt.show()
 
 
 def create_best_thresholds():
     # Assuming df_walks is a DataFrame where each row is a walk and each column is a timestep
     # Define the range for y-intercepts and gradients
-    y_begin = -5
+    y_begin = 0  # used to be -5
     y_end = 5
-    grad_begin = -1
-    grad_end = 1
+    grad_begin = -0.002  # used to be between -1 and 1
+    grad_end = 0
     range_of_values = 100
     OLT = 50
     # y_intercepts = np.linspace(-10, 10, 100)  # Adjust these ranges and steps as needed
@@ -503,7 +544,7 @@ def create_best_thresholds():
     )
 
     # Plot the 3D data
-    plot_3d_threshold_data(df_threshold_data)
+    # plot_3d_threshold_data(df_threshold_data)
 
 
 if __name__ == "__main__":
@@ -533,8 +574,25 @@ if __name__ == "__main__":
     #     pd_walks_data, OLT=50, initial_bound_distance=5, end_y=-5, total_steps=100
     # )
 
+    # create_best_thresholds()
+    #
     path_to_average_times = os.path.join(
-        (os.getcwd()), "data/optimal_threshold_data.csv"
+        (os.getcwd()),
+        "data/optimal_threshold_data_0_5_-0.002_0.csv",
+        # (os.getcwd()),
+        # "data/optimal_threshold_data_0_5_-2.0_0.csv",
     )
     df_threshold_average_times = pd.read_csv(path_to_average_times)
+    # find the second smallest element in the average meeting time column and its row
+    print(
+        df_threshold_average_times.loc[
+            df_threshold_average_times["average_meeting_time"].nsmallest(3).index[1]
+        ]
+    )
+    print(
+        df_threshold_average_times.loc[
+            df_threshold_average_times["average_meeting_time"].idxmin()
+        ]
+    )
+    print(df_threshold_average_times["average_meeting_time"].min())
     plot_3d_threshold_data(df_threshold_average_times)

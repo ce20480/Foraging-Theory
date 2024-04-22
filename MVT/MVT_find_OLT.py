@@ -31,10 +31,10 @@ if __name__ == "__main__":
     travel_t = 6  # Time it takes to travel between patches
 
     # Starting resources in patches: low, medium, and high quality.
-    patch_start_R = np.array([32.5, 45])
+    patch_start_R = np.array([32.5, 45, 57.5])
 
     # Environment setups: rich and poor.
-    env = np.array([[0.5, 0.5], [0.5, 0.5]])
+    env = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
     env_n = env.shape[0]
 
     # Simulation parameters
@@ -68,27 +68,52 @@ if __name__ == "__main__":
     plt.figure(figsize=(10, 6))
     for i in range(patch_n):
         plt.plot(reso, RR[i, :], label=f"Patch Type {i+1}")
-        plt.axhline(y=np.max(RR[i, :]), color="grey", linestyle="--")
+        plt.axhline(
+            y=np.max(RR[i, :]),
+            color="grey",
+            linestyle="--",
+            label=f"Max RR for Patch Types" if i == 0 else None,
+        )
     plt.xlabel("Patch Residence Time (t)")
-    plt.ylabel("Reward Rate (RR)")
-    plt.title("Reward Rate for Each Patch Type")
+    plt.ylabel("Average Reward Rate (RR)")
+    plt.title("Average Reward Rate for Each Environment")
     plt.legend()
-    plt.show()
+    plt.savefig("Reward_Rate_Patch_Type.png")
 
     # Calculate and plot Optimal Leaving Time (OLT) - finding the max RR index for each patch type
-    OLT = np.argmax(RR, axis=1) * t_diff
-    print(OLT)
+    OLT = np.argmax(RR, axis=1)
+    # print(OLT*t_diff)
 
     # Plotting Instantaneous Reward for all patches along with RR
-    # plt.figure(figsize=(10, 6))
-    # for i in range(patch_n):
-    #     plt.plot(
-    #         reso, instant_R[i, :], label=f"Instantaneous Reward for Patch Type {i+1}"
-    #     )
-    #     plt.plot(reso, RR[i, :], label=f"Reward Rate for Patch Type {i+1}")
-    #     plt.axvline(x=reso[OLT[i]], color="grey", linestyle="--")
-    # plt.xlabel("Patch Residence Time (t)")
-    # plt.ylabel("Reward / Reward Rate")
-    # plt.title("Instantaneous Reward and Reward Rate for Each Patch Type")
-    # plt.legend()
-    # plt.show()
+    plt.figure(figsize=(10, 6))
+    for i in range(patch_n):
+        plt.plot(
+            reso,
+            E[i, :],
+            label=f"Instantaneous Reward Rates For Each Patch Type" if i == 0 else None,
+        )
+        plt.plot(
+            reso,
+            RR[i, :],
+            label=f"Average Reward Rate for Patch Type" if i == 0 else None,
+        )
+        plt.axvline(
+            x=reso[OLT[i] - 75],
+            color="grey",
+            linestyle="--",
+            label="OLT" if i == 0 else None,
+        )
+        plt.axhline(
+            y=np.max(RR[i, :]),
+            color="grey",
+            linestyle="--",
+            label=f"Max RR for Patch Types" if i == 0 else None,
+        )
+
+    plt.xlabel("Patch Residence Time (t)")
+    plt.ylabel("Reward / Reward Rate")
+    plt.title(
+        "Instantaneous Reward and Average Reward Rate for Each Patch Type To Find OLT"
+    )
+    plt.legend()
+    plt.savefig("InstantAndARROLT.png")

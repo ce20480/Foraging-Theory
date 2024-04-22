@@ -46,34 +46,41 @@ def plot_overlap_RRE_and_instant_R(RRE, instant_R, maxRRE):
 
     # Plot RRE for each environment
     for i in range(RRE.shape[0]):
-        plt.plot(RRE[i, :], label=f"Environment {i+1} RRE")
+        plt.plot(RRE[i, :], "--", label=f"Environment {i+1} RRE")
         plt.xlabel("Patch Residence Time (t)")
         plt.ylabel("RR")
-        plt.title("RR for Environment (Background RR)")
+        plt.title("ARR And Instantaneous RR For LeHeron Task To Find OLT")
 
     # Overlay instantaneous reward rates
     for i in range(instant_R.shape[0]):
-        plt.plot(instant_R[i, :], "--", label=f"Instant R Patch {i+1}")
+        plt.plot(instant_R[i, :], "-", color="Black", label=f"Instant R Patch {i+1}")
         plt.xlabel("Patch Residence Time (t)")
-        plt.ylabel("Foreground Reward Rate")
+        plt.ylabel("Instantaneous Reward Rate")
 
     # Draw horizontal lines to indicate RRE leave points
     colors = [
         "red",
-        "green",
-        "blue",
-        "cyan",
-        "magenta",
-        "yellow",
+        # "green",
+        # "blue",
+        # "cyan",
+        # "magenta",
+        # "orange",
+        # "yellow",
     ]  # Extend or loop through colors as needed
     for i, max_rre in enumerate(maxRRE):
         color = colors[
             i % len(colors)
         ]  # Cycle through colors if there are more lines than defined colors
-        plt.axhline(y=max_rre, color=color, linestyle="--", label=f"Max RRE Env {i+1}")
+        plt.axhline(
+            y=max_rre,
+            color=color,
+            linestyle="-",
+            label=f"Max RRE Env {i+1}",
+            alpha=1 / (i + 1),
+        )
 
     plt.legend()
-    plt.show()
+    plt.savefig("Overlap_RRE_Instant_R.png")
 
 
 def plot_instant_R_with_maxRRE(instant_R, maxRRE):
@@ -91,8 +98,8 @@ def plot_instant_R_with_maxRRE(instant_R, maxRRE):
     for i in range(instant_R.shape[0]):
         plt.plot(instant_R[i, :], label=f"Instant Reward Patch {i+1}")
     plt.xlabel("Patch Residence Time (t)")
-    plt.ylabel("Foreground")
-    plt.title("Foreground Instantaneous Reward for All Patches")
+    plt.ylabel("Instantaneous Reward Rate")
+    plt.title("Instantaneous Reward for All Patches")
 
     # Draw horizontal lines to indicate max RRE for each environment
     colors = [
@@ -107,7 +114,7 @@ def plot_instant_R_with_maxRRE(instant_R, maxRRE):
         color = colors[
             i % len(colors)
         ]  # Cycle through colors if there are more lines than defined colors
-        plt.axhline(y=max_rre, color=color, linestyle="--", label=f"Max RRE Env {i+1}")
+        plt.axhline(y=max_rre, color=color, linestyle="-", label=f"Max RRE Env {i+1}")
 
     plt.legend()
     plt.show()
@@ -248,19 +255,19 @@ if __name__ == "__main__":
     # _ = plot_RR_for_environments_with_patches(RRE, RRE_patch, maxRRE, patch_start_R)
     # print(_)
     # plot_RR_for_all_patches(RR)
-    # plot_overlap_RRE_and_instant_R(RRE, instant_R, maxRRE)
+    plot_overlap_RRE_and_instant_R(RRE, instant_R, maxRRE)
     # plot_instant_R_with_maxRRE(instant_R, maxRRE)
 
     # Assuming RRE and RRE_patch are defined according to your data structure
-    OLT = calculate_OLT_for_patches_across_environments(instant_R, maxRRE, reso)
-
-    # Print the calculated OLTs
-    for key, olt_time in OLT.items():
-        if olt_time is not None:
-            print(
-                f"Environment {key[0] + 1}, Patch {key[1] + 1}: OLT is at time {olt_time}"
-            )
-        else:
-            print(
-                f"Environment {key[0] + 1}, Patch {key[1] + 1}: No OLT found within given resolution"
-            )
+    # OLT = calculate_OLT_for_patches_across_environments(instant_R, maxRRE, reso)
+    #
+    # # Print the calculated OLTs
+    # for key, olt_time in OLT.items():
+    #     if olt_time is not None:
+    #         print(
+    #             f"Environment {key[0] + 1}, Patch {key[1] + 1}: OLT is at time {olt_time}"
+    #         )
+    #     else:
+    #         print(
+    #             f"Environment {key[0] + 1}, Patch {key[1] + 1}: No OLT found within given resolution"
+    #         )
